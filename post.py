@@ -58,6 +58,8 @@ OPENING_POSTS = [
     "☎03-6300-6088",
 ]
 
+STATE_FILE = "opening_last_index.txt"
+
 def post(url, data):
     req = urllib.request.Request(
         url,
@@ -67,8 +69,27 @@ def post(url, data):
     with urllib.request.urlopen(req) as res:
         return json.loads(res.read().decode("utf-8"))
 
+def load_last_index():
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            return int(f.read().strip())
+    except:
+        return None
+
+def save_last_index(index):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        f.write(str(index))
+
+def choose_index(count, last_index):
+    choices = list(range(count))
+    if last_index is not None and count > 1 and last_index in choices:
+        choices.remove(last_index)
+    return random.choice(choices)
+
 def main():
-    text = random.choice(OPENING_POSTS)
+    last_index = load_last_index()
+    index = choose_index(len(OPENING_POSTS), last_index)
+    text = OPENING_POSTS[index]
 
     create_url = f"https://graph.threads.net/v1.0/{USER_ID}/threads"
     create_data = {
@@ -86,6 +107,8 @@ def main():
     }
     published = post(publish_url, publish_data)
     print(published)
+
+    save_last_index(index)
 
 if __name__ == "__main__":
     main()
