@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "7 3 * * *"
+    - cron: "37 3 * * *"
+    - cron: "7 4 * * *"
 
 permissions:
   contents: write
@@ -30,6 +32,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add opening_last_index.txt
-          git commit -m "Update opening last index" || echo "No changes to commit"
+          git add opening_last_index.txt opening_last_date.txt
+          git commit -m "Update opening state files" || echo "No changes to commit"
           git push
