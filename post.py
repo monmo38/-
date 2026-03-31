@@ -3,6 +3,7 @@ import os
 import random
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta, timezone
 
 ACCESS_TOKEN = os.environ["THREADS_ACCESS_TOKEN"]
 USER_ID = os.environ["THREADS_USER_ID"]
@@ -58,7 +59,11 @@ OPENING_POSTS = [
     "☎03-6300-6088",
 ]
 
-STATE_FILE = "opening_last_index.txt"
+INDEX_STATE_FILE = "opening_last_index.txt"
+DATE_STATE_FILE = "opening_last_date.txt"
+
+JST = timezone(timedelta(hours=9))
+
 
 def post(url, data):
     req = urllib.request.Request(
@@ -69,16 +74,32 @@ def post(url, data):
     with urllib.request.urlopen(req) as res:
         return json.loads(res.read().decode("utf-8"))
 
+
 def load_last_index():
     try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
+        with open(INDEX_STATE_FILE, "r", encoding="utf-8") as f:
             return int(f.read().strip())
-    except:
+    except Exception:
         return None
 
+
 def save_last_index(index):
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
+    with open(INDEX_STATE_FILE, "w", encoding="utf-8") as f:
         f.write(str(index))
+
+
+def load_last_date():
+    try:
+        with open(DATE_STATE_FILE, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return None
+
+
+def save_last_date(date_str):
+    with open(DATE_STATE_FILE, "w", encoding="utf-8") as f:
+        f.write(date_str)
+
 
 def choose_index(count, last_index):
     choices = list(range(count))
@@ -86,7 +107,20 @@ def choose_index(count, last_index):
         choices.remove(last_index)
     return random.choice(choices)
 
+
+def today_jst():
+    return datetime.now(JST).strftime("%Y-%m-%d")
+
+
+def already_posted_today():
+    return load_last_date() == today_jst()
+
+
 def main():
+    if already_posted_today():
+        print("Already posted today in JST. Skipping.")
+        return
+
     last_index = load_last_index()
     index = choose_index(len(OPENING_POSTS), last_index)
     text = OPENING_POSTS[index]
@@ -109,6 +143,8 @@ def main():
     print(published)
 
     save_last_index(index)
+    save_last_date(today_jst())
+
 
 if __name__ == "__main__":
     main()
