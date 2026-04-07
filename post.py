@@ -71,8 +71,16 @@ def post(url, data):
         data=urllib.parse.urlencode(data).encode("utf-8"),
         method="POST",
     )
-    with urllib.request.urlopen(req) as res:
-        return json.loads(res.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req) as res:
+            body = res.read().decode("utf-8")
+            print("API response:", body)
+            return json.loads(body)
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8", errors="replace")
+        print("HTTPError status:", e.code)
+        print("HTTPError body:", error_body)
+        raise
 
 
 def load_last_index():
